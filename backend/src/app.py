@@ -7,7 +7,7 @@ from flask import Flask
 from flask import request
 
 app = Flask(__name__)
-db_filename = "cms.db"
+db_filename = "tchat.db"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///%s" % db_filename
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -18,6 +18,8 @@ with app.app_context():
     db.create_all()
 
 # generalized response formats
+
+
 def success_response(data, code=200):
     return json.dumps({"success": True, "data": data}), code
 
@@ -51,6 +53,27 @@ def get_user(user_id):
     return success_response(user.serialize())
 
 
+# Delete user
+@app.route("/api/users/<int:user_id>/", methods=["DELETE"])
+def delete_user(user_id):
+    user = User.query.filter_by(id=user_id).first()
+    if user is None:
+        return failure_response('User not found!')
+    user_data = user.serialize()
+    db.session.delete(user)
+    db.session.commit()
+    return success_response(user_data)
+
+
+# Get all users
+@app.route("/api/users/")
+def get_all_users():
+    users = User.query.all()
+    if users is None:
+        return success_response([])
+    return success_response([user.serialize() for user in users])
+
+
 # -- MESSAGE ROUTES ---------------------------------------------------
 
 
@@ -69,32 +92,41 @@ def send_message():
         content=body_content,
         date=date,
         read=read,
-        sender_id=body_sender_id
+        sender_id=body_sender_id,
+        receiver_id=body_receiver_id
     )
     db.session.add(new_message)
     db.session.commit()
     return success_response(new_message.serialize(), 201)
 
 # Get unread messages
-@app.route("/api/users/<int:user_id>/messages/unread/")
-def get_unread_messages(user_id):
-    messages = Message.query.filter_by(receiver_id=user_id, read=False).all()
-    if messages is None:
-        return failure_response('No unread messages!')
-    for message in messages:
-        message.read = True
-    db.session.commit()
-    return success_response([message.serialize() for message in messages])
+# @app.route("/api/users/<int:user_id>/messages/unread/", methods=["POST"])
+# def get_unread_messages(user_id):
+#     messages = Message.query.filter_by(receiver_id=user_id, read=False).all()
+#     if messages is None:
+#         return failure_response('No unread messages!')
+#     for message in messages:
+#         message.read = True
+#     db.session.commit()
+#     return success_response([message.serialize() for message in messages])
 
 # Get all messages
 @app.route("/api/users/<int:user_id>/messages/")
 def get_all_messages(user_id):
-    messages = Message.query.filter_by(receiver_id=user_id).all()
-    if messages is None:
-        return failure_response('No messages!')
+    unread_only = request.args.get('unread') != None
+    print("-"*20)
+    print(unread_only)
+    if unread_only:
+        messages = Message.query.filter_by(
+            receiver_id=user_id, read=False).all()
+        for message in messages:
+            message.read = True
+        db.session.commit()
+    else:
+        messages = Message.query.filter_by(receiver_id=user_id).all()
     return success_response([message.serialize() for message in messages])
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port, debug=True)
