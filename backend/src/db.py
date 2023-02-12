@@ -17,6 +17,12 @@ class User(db.Model):
     def __init__(self, **kwargs):
         self.name = kwargs.get('name')
 
+    def get_all_messages(self):
+        return self.received_messages
+
+    def get_unread_messages(self):
+        return [message for message in self.received_messages if not message.read]
+
     def serialize(self):
         return {
             'id': self.id,
@@ -26,8 +32,8 @@ class User(db.Model):
     @staticmethod
     def get_name_from_id(id):
         query = User.query.filter_by(id=id)
-        if query is None:
-            return None
+        if query.first() is None:
+            return "<no name>"
         return query.first().name
 
 
@@ -41,7 +47,8 @@ class Message(db.Model):
     receiver_id = db.Column(
         db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    # sender = relationship("User")#, foreign_keys=[sender_id])
+    # sender = db.relationship("User", foreign_keys=[sender_id])
+    # receiver = db.relationship("User", foreign_keys=[receiver_id])
 
     def __init__(self, **kwargs):
         self.content = kwargs.get('content')
@@ -58,6 +65,6 @@ class Message(db.Model):
             'read': self.read,
             'sender_id': self.sender_id,
             # User.get_name_from_id(self.sender_id),
-            'sender_name': self.sender.name,
+            'sender_name': User.get_name_from_id(self.sender_id),
             'receiver_id': self.receiver_id,
         }

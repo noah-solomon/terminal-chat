@@ -11,7 +11,7 @@ db_filename = "tchat.db"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///%s" % db_filename
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SQLALCHEMY_ECHO"] = True
+app.config["SQLALCHEMY_ECHO"] = False
 
 db.init_app(app)
 with app.app_context():
@@ -88,6 +88,10 @@ def send_message():
     body_receiver_id = body.get('receiver_id')
     if body_content is None or body_sender_id is None:
         return failure_response("Please provide a content and sender_id", 400)
+    if User.query.filter_by(id=body_sender_id).first() is None:
+        return failure_response("Sender not found")
+    if User.query.filter_by(id=body_receiver_id).first() is None:
+        return failure_response("Receiver not found")
     new_message = Message(
         content=body_content,
         date=date,
@@ -99,34 +103,24 @@ def send_message():
     db.session.commit()
     return success_response(new_message.serialize(), 201)
 
-# Get unread messages
-# @app.route("/api/users/<int:user_id>/messages/unread/", methods=["POST"])
-# def get_unread_messages(user_id):
-#     messages = Message.query.filter_by(receiver_id=user_id, read=False).all()
-#     if messages is None:
-#         return failure_response('No unread messages!')
-#     for message in messages:
-#         message.read = True
-#     db.session.commit()
-#     return success_response([message.serialize() for message in messages])
-
 # Get all messages
 @app.route("/api/users/<int:user_id>/messages/")
 def get_all_messages(user_id):
+    user = User.query.filter_by(id=user_id).first()
+    if user is None:
+        return failure_response("User not found")
     unread_only = request.args.get('unread') != None
-    print("-"*20)
-    print(unread_only)
     if unread_only:
-        messages = Message.query.filter_by(
-            receiver_id=user_id, read=False).all()
+        messages = user.get_unread_messages()
         for message in messages:
             message.read = True
         db.session.commit()
     else:
-        messages = Message.query.filter_by(receiver_id=user_id).all()
+        messages = user.get_all_messages()
     return success_response([message.serialize() for message in messages])
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    debug = os.environ.get("DEBUG", False)
+    app.run(host="0.0.0.0", port=port, debug=debug)

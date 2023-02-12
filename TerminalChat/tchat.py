@@ -2,9 +2,8 @@ import datetime
 import click
 import requests
 import os
-import json
 
-BASE_URL = 'http://localhost:8000/api'
+BASE_URL = "https://kind-moss-bb46b8b1ffc44c4ebf8b65aac6c47177.azurewebsites.net/api"
 USER_ID_FILENAME = os.path.join(os.path.expanduser("~"), ".tchat_id")
 
 
@@ -14,19 +13,23 @@ def cli():
 
 
 @cli.command()
-@click.option('--name', prompt='Name', help='The name of the user.')
-def sign_up(name):
+def sign_up():
     """Command to sign up."""
     if os.path.exists(USER_ID_FILENAME):
-        click.echo('You already have a user!')
-        return
-    click.echo('Creating user %s' % name)
-    res = requests.post(BASE_URL + '/users/', json={'name': name})
+        user_id, user_name = get_user_info()
+        if user_id is not None:
+            click.echo(
+                f'Hi, {user_name}! You are already signed up with ID {user_id}.')
+            return
+        # else, continue creating new file
+    user_name = click.prompt('Name', type=str)
+    click.echo('Creating user %s' % user_name)
+    res = requests.post(BASE_URL + '/users/', json={'name': user_name})
     if res.status_code == 201:
         user_id = res.json()['data']['id']
         with open(USER_ID_FILENAME, "w") as file:
-            file.write(str(user_id))
-        click.echo('User created!')
+            file.write("{},{}".format(str(user_id), user_name))
+        click.echo('User created! Your ID: %s' % user_id)
     else:
         click.echo(f'Error creating user: \n {res.text}')
 
@@ -34,23 +37,30 @@ def sign_up(name):
 @cli.command()
 def send():
     """Command to send a message."""
-    user_id = get_user_id()
+    user_id, _ = get_user_info()
     if user_id is None:
-        click.echo('You must create a user first!')
+        click.echo('You must create a user first!\nUse command: `tchat sign_up`')
         return
-
-    content = click.prompt('Message content', type=str)
 
     receiver_options = requests.get(BASE_URL + '/users/').json()['data']
     if receiver_options is []:
         click.echo('No users to send messages to!')
         return
 
-    click.echo('Receiver ID options:')
+    click.echo('Who would you like to message? Options:')
     for user in receiver_options:
         click.echo('ID: %s, Name: %s' % (user['id'], user['name']))
+    if len(receiver_options) == 0:
+        click.echo('No users to send messages to!')
+        return
+
+    click.echo()
 
     receiver_id = click.prompt('Receiver ID', type=int)
+
+    click.echo()
+
+    content = click.prompt('Message content', type=str)
 
     click.echo('Sending message...')
     res = requests.post(BASE_URL + '/messages/', json={
@@ -64,34 +74,11 @@ def send():
         click.echo(f'Error creating message: \n {res.text}')
 
 
-# @cli.command()
-# def get_unread():
-#     """Command to get unread messages (and mark as read)."""
-#     user_id = get_user_id()
-#     if user_id is None:
-#         click.echo('You must create a user first!')
-#         return
-
-#     res = requests.get(f'{BASE_URL}/users/{user_id}/messages?unread=true')
-#     if res.status_code == 200:
-#         data = res.json().get('data')
-#         for message in data:
-#             date = message.get("date")
-#             content = message.get("content")
-#             sender_id = message.get("sender_id")
-#             sender_name = message.get("sender_name")
-#             click.echo(f'{date} - {sender_name} ({sender_id}): {content}')
-#         if data == []:
-#             click.echo('No unread messages.')
-#     else:
-#         click.echo(f'Error getting messages: \n {res.text}')
-
-
 @cli.command()
-@click.option('--all/-a', is_flag=True, help='Get all messages.')
+@click.option('-a', '--all', is_flag=True, help='Get all messages.')
 def read(all):
-    """Command to get unread messages. Use --all to get all messages."""
-    user_id = get_user_id()
+    """Command to get unread messages,  use --all to get all messages."""
+    user_id, user_name = get_user_info()
     if user_id is None:
         click.echo('You must create a user first!')
         return
@@ -111,29 +98,31 @@ def read(all):
             sender_name = message.get("sender_name")
             if date.year == datetime.datetime.now().year:
                 if date.day == datetime.datetime.now().day:
-                    date_formatted = date.strftime('today at %H:%M%p')
+                    date_formatted = date.strftime('today at %-I:%M%p')
                 elif date.day == datetime.datetime.now().day - 1:
-                    date_formatted = date.strftime('yesterday at %H:%M%p')
+                    date_formatted = date.strftime('yesterday at %-I:%M%p')
                 else:
-                    date_formatted = date.strftime('on %b %d at %H:%M%p')
+                    date_formatted = date.strftime('on %b %d at %-I:%M%p')
             else:
-                date_formatted = date.strftime('on %b %d, %Y at %H:%M%p')
+                date_formatted = date.strftime('on %b %d, %Y at %-I:%M%p')
             click.echo(
                 f'{sender_name} (ID: {sender_id}) {date_formatted}: {content}')
         if not data:
-            click.echo('No{} messages.'.format('' if all else ' unread'))
+            click.echo('Hi {}! No{} messages.'.format(
+                user_name, '' if all else ' unread'))
         click.echo()
     else:
         click.echo(f'Error getting messages: \n {res.text}')
 
 
-def get_user_id():
-    """Helper to get a user id from the ID file."""
+def get_user_info():
+    """Helper to get a user id and name from the ID file."""
     user_id = None
+    user_name = None
     if os.path.exists(USER_ID_FILENAME):
         with open(USER_ID_FILENAME, "r") as file:
-            user_id = int(file.read())
-    return user_id
+            user_id, user_name = file.read().split(',')
+    return int(user_id), user_name
 
 
 if __name__ == '__main__':
