@@ -8,7 +8,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name='TermChat',
-    version='0.1.1',
+    version='0.1.3',
     author='Noah Solomon',
     author_email='hello@noahsolo.com',
     license='MIT License',

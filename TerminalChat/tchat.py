@@ -2,6 +2,8 @@ import datetime
 import click
 import requests
 import os
+import pytz
+import tzlocal
 
 BASE_URL = "https://kind-moss-bb46b8b1ffc44c4ebf8b65aac6c47177.azurewebsites.net/api"
 USER_ID_FILENAME = os.path.join(os.path.expanduser("~"), ".tchat_id")
@@ -90,21 +92,28 @@ def read(all):
     if res.status_code == 200:
         data = res.json().get('data')
         click.echo()
+        local_timezone = tzlocal.get_localzone()  # get pytz tzinfo
         for message in data:
-            date = datetime.datetime.strptime(
-                message.get("date"), '%Y-%m-%d %H:%M:%S.%f')
+            date = message.get("date")
+            utc_time = datetime.datetime.strptime(
+                date, '%Y-%m-%d %H:%M:%S.%f')
+            local_time = utc_time.replace(
+                tzinfo=pytz.utc).astimezone(local_timezone)
             content = message.get("content")
             sender_id = message.get("sender_id")
             sender_name = message.get("sender_name")
-            if date.year == datetime.datetime.now().year:
-                if date.day == datetime.datetime.now().day:
-                    date_formatted = date.strftime('today at %-I:%M%p')
-                elif date.day == datetime.datetime.now().day - 1:
-                    date_formatted = date.strftime('yesterday at %-I:%M%p')
+            if local_time.year == datetime.datetime.now().year:
+                if local_time.day == datetime.datetime.now().day:
+                    date_formatted = local_time.strftime('today at %-I:%M%p')
+                elif local_time.day == datetime.datetime.now().day - 1:
+                    date_formatted = local_time.strftime(
+                        'yesterday at %-I:%M%p')
                 else:
-                    date_formatted = date.strftime('on %b %d at %-I:%M%p')
+                    date_formatted = local_time.strftime(
+                        'on %b %d at %-I:%M%p')
             else:
-                date_formatted = date.strftime('on %b %d, %Y at %-I:%M%p')
+                date_formatted = local_time.strftime(
+                    'on %b %d, %Y at %-I:%M%p')
             click.echo(
                 f'{sender_name} (ID: {sender_id}) {date_formatted}: {content}')
         if not data:
