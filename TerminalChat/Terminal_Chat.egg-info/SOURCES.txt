@@ -1,0 +1,10 @@
+LICENSE
+MANIFEST.in
+README.md
+setup.py
+Terminal_Chat.egg-info/PKG-INFO
+Terminal_Chat.egg-info/SOURCES.txt
+Terminal_Chat.egg-info/dependency_links.txt
+Terminal_Chat.egg-info/entry_points.txt
+Terminal_Chat.egg-info/requires.txt
+Terminal_Chat.egg-info/top_level.txt

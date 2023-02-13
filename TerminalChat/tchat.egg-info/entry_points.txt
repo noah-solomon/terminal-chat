@@ -1,0 +1,3 @@
+[console_scripts]
+tchat = tchat:cli
+

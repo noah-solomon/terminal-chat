@@ -10,9 +10,9 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
     sent_messages = db.relationship(
-        'Message', backref='sender', lazy=True, foreign_keys='Message.sender_id')
+        'Message', backref='sender', lazy=True, cascade='delete', foreign_keys='Message.sender_id')
     received_messages = db.relationship(
-        'Message', backref='receiver', lazy=True, foreign_keys='Message.receiver_id')
+        'Message', backref='receiver', lazy=True, cascade='delete', foreign_keys='Message.receiver_id')
 
     def __init__(self, **kwargs):
         self.name = kwargs.get('name')

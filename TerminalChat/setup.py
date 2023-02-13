@@ -7,8 +7,8 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 
 setup(
-    name='tchat',
-    version='0.1.0',
+    name='TermChat',
+    version='0.1.1',
     author='Noah Solomon',
     author_email='hello@noahsolo.com',
     license='MIT License',
@@ -17,10 +17,8 @@ setup(
     long_description_content_type="text/markdown",
     url='https://github.com/noah-solomon/terminal-chat',
     py_modules=['tchat', 'app'],
-    install_requires=[
-        'Click',
-        'requests'
-    ],
+    install_requires=[requirements],
+    python_requires='>=3.7',
     entry_points={
         'console_scripts': [
             'tchat = tchat:cli',

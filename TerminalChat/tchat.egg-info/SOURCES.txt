@@ -1,0 +1,11 @@
+LICENSE
+MANIFEST.in
+README.md
+setup.py
+tchat.py
+tchat.egg-info/PKG-INFO
+tchat.egg-info/SOURCES.txt
+tchat.egg-info/dependency_links.txt
+tchat.egg-info/entry_points.txt
+tchat.egg-info/requires.txt
+tchat.egg-info/top_level.txt

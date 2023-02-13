@@ -1,0 +1,11 @@
+LICENSE
+MANIFEST.in
+README.md
+setup.py
+tchat.py
+noah_chat.egg-info/PKG-INFO
+noah_chat.egg-info/SOURCES.txt
+noah_chat.egg-info/dependency_links.txt
+noah_chat.egg-info/entry_points.txt
+noah_chat.egg-info/requires.txt
+noah_chat.egg-info/top_level.txt

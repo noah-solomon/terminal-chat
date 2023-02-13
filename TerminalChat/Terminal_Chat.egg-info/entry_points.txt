@@ -1,0 +1,2 @@
+[console_scripts]
+termchat = termchat:cli
