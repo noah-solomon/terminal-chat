@@ -2,7 +2,7 @@
  tchat.db
 
  # Byte-compiled / optimized / DLL files
-__pycache__/
+ **/__pycache__/**
  *.py[cod]
  *$py.class
 
@@ -11,9 +11,9 @@ __pycache__/
 
  # Distribution / packaging
  .Python
- build/
+ **/build/**
  develop-eggs/
- dist/*
+ **/dist/**
  downloads/
  eggs/
  .eggs/
@@ -25,7 +25,7 @@ __pycache__/
  wheels/
  pip-wheel-metadata/
  share/python-wheels/
- *.egg-info/
+ **/*.egg-info/**
  .installed.cfg
  *.egg
  MANIFEST
