@@ -27,6 +27,6 @@ TerminalChat backend is hosted on Azure, so no need to run your own server (unle
 ### Without Docker
 3. Make a virtual environment with `python3 -m venv venv`
 4. Activate your virtual environment with `source venv/bin/activate` (Mac)
-4. Install requirements with `pip install requirements.txt`
-5. Run server with `python3 app.py`
+5. Install requirements with `pip install requirements.txt`
+6. Run server with `python3 app.py`
 
