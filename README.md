@@ -4,7 +4,7 @@ Simple terminal chat backend and CLI to send messages.
 
 ## CLI installation
 
-`pip install TerminalChat`
+`pip install TerminalChat` (Hosted on [PyPi](https://pypi.org/project/TerminalChat/))
 
 ## CLI Usage
 Usage: `tchat [OPTIONS] COMMAND [ARGS]`
